@@ -33,9 +33,6 @@ class plot_localization():
     def plot_msg_odom_callback(self, msg):
         self.pose_odom_x.append(msg.pose.pose.position.x)
         self.pose_odom_y.append(msg.pose.pose.position.y) 
-        
-        #plt.xlim([-5, -16])
-        #plt.ylim([-25, -5])
 
     def plot_msg_gps_callback(self, msg):
         self.counter += 1
@@ -45,11 +42,7 @@ class plot_localization():
     def plot_map(self):
         self.counter += 1
         self.ax[0].plot(self.pose_odom_y, self.pose_odom_x, '*', color='blue')
-        #self.ax[0].set_xlim([-5, -16])
-        #self.ax[0].set_ylim([-25, -5])
         self.ax[1].plot(self.lat, self.long, '*', color='red')
-        #self.ax[1].set_ylim([18.0679, 18.0682])
-        #self.ax[1].set_xlim([59.35076, 59.35088])
         plt.draw()
         plt.pause(0.00000000001)
 
@@ -76,7 +69,7 @@ class plot_localization():
 
         fig.show()
 if __name__ == '__main__':
-    rospy.init_node('plot_outdoor_localization', anonymous=False)
+    rospy.init_node('plot_localization', anonymous=False)
     time_start = rospy.Time.now()
     rate = rospy.Rate(10)
     plot_obj = plot_localization()
@@ -98,5 +91,3 @@ if __name__ == '__main__':
         else:
             last_counter = plot_obj.counter
         rate.sleep()
-#        if same == 20:
-#            break
