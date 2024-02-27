@@ -4,7 +4,9 @@ from geometry_msgs.msg import TwistWithCovarianceStamped
 from svea.sensors import WheelEncoder
 
 
-""" Node for reading a wheel encoder
+""" 
+Node for reading a wheel encoder
+Used in wheel_encoder.launch
 """
 
 

@@ -1,3 +1,5 @@
+# USED by AMCL in localize.launch
+
 #Overall filter parameters
 min_particles: 100 
 max_particles: 800

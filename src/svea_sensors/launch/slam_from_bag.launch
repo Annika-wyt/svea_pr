@@ -14,6 +14,9 @@
     </include>
 
     <!-- If ZED is used -->
+
+    <!-- Are we ever using ZED again  -->
+    <!-- SHOULD WE JUST RUN LOCALIZE.LAUNCH HERE?? -->
     <group unless="$(arg use_rs)">
         <arg name="camera_model" default="zedm" /> <!-- 'zed' or 'zedm' -->
         <param name="zed_description" textfile="$(find svea_sensors)/urdf/$(arg camera_model).urdf"/>
@@ -27,6 +30,8 @@
         </node>
     </group>
     <!-- If Realsense T265 is used -->
+    <!-- NO MORE RS_EKF.YAML -> LOCAL_EKF.YAML -->
+    <!-- SHOULD WE JUST RUN LOCALIZE.LAUNCH HERE?? -->
     <group if="$(arg use_rs)">
         <node pkg="robot_localization" type="ekf_localization_node" name="ekf_rs" clear_params="true" >
             <rosparam command="load" file="$(find svea_sensors)/params/robot_localization/rs_ekf.yaml" />

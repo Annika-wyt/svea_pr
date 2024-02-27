@@ -1,3 +1,4 @@
+# USED IN SLAM_FROM_BAG.LAUNCH
 frequency: 30
 
 sensor_timeout: 0.1

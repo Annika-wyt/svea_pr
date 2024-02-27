@@ -12,6 +12,9 @@
 
 
     <!-- Start the stereo camera -->
+
+    <!-- Change to start localize -->
+    <!-- Still need ZED?? -->
     <include if="$(eval camera == 'rs')" file="$(find svea_sensors)/launch/rs_odometry.launch">
         <arg name="xavier" value="$(arg xavier)"/>
     </include>

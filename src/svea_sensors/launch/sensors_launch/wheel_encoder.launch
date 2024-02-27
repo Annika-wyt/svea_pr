@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!--
-    Default odometry launch file
+    Wheel encoder launch file
 -->
 
 <launch>

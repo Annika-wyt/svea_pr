@@ -1,3 +1,5 @@
+<!-- USED in  -->
+<!-- Do we need ZED thingy? -->
 <?xml version="1.0"?>
 <!--
     Zed based odometry launch file
@@ -10,7 +12,6 @@
     <arg name="node_name"       default="zed_node"/>
     <arg name="publish_urdf"    default="true"/>
     <arg name="lidar_ip"        default="192.168.3.11"/>
-
 
     <!-- IMU -->
     <node ns="imu" name="imu_node" pkg="svea_sensors" type="bno055_i2c_node" respawn="true" respawn_delay="2">

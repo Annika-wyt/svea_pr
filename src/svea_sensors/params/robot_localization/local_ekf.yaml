@@ -1,3 +1,5 @@
+# USED IN LOCALIZE.LAUNCH FOR LOCAL EKF
+
 frequency: 30
 
 sensor_timeout: 0.1

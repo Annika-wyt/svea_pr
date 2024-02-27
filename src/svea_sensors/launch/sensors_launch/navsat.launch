@@ -1,4 +1,7 @@
 <?xml version="1.0"?>
+<!-- 
+    run navsat for gps
+ -->
 <launch>
     <arg name="delay"           default="2.0" />
     <arg name="yaw_offset"      default="0" />
