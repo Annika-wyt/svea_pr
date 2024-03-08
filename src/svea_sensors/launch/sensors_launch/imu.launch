@@ -8,10 +8,41 @@
     <arg name="imu_device" default="/dev/i2c-1" />
     <arg name="imu_address" default="40" />
     <arg name="imu_frame_id" default="imu" />
+    <arg name="new_imu" default="false" />
 
-    <node ns="imu" name="imu_node" pkg="svea_sensors" type="bno055_i2c_node" respawn="true" respawn_delay="2">
-        <param name="device"                    value="$(arg imu_device)" />
-        <param name="address"   type="int"      value="$(arg imu_address)"/>
-        <param name="frame_id"  type="string"   value="$(arg imu_frame_id)"/>
-    </node>
+    <group unless="$(arg new_imu)">
+        <node ns="imu" name="imu_node" pkg="svea_sensors" type="bno055_i2c_node" respawn="true" respawn_delay="2">
+            <param name="device"                    value="$(arg imu_device)" />
+            <param name="address"   type="int"      value="$(arg imu_address)"/>
+            <param name="frame_id"  type="string"   value="$(arg imu_frame_id)"/>
+        </node>
+    </group>
+    
+
+    <group if ="$(arg new_imu)">
+        <node pkg="nodelet" type="nodelet" name="imu_manager" args="manager" output="screen" />
+
+        #### IMU Driver ###########################################################
+
+        <node pkg="nodelet" type="nodelet" name="ImuFilterNodelet" args="load imu_filter_madgwick/ImuFilterNodelet imu_manager" output="screen">
+            <param name="publish_tf"              value="false"/>
+            <param name="zeta"                    value="0.1"/> <!-- 0.0041/ 0.033?? -1.0 to 1.0 -->
+            <!-- https://stackoverflow.com/questions/47589230/what-is-the-best-beta-value-in-madgwick-filterhttps://stackoverflow.com/questions/47589230/what-is-the-best-beta-value-in-madgwick-filter -->
+            <param name="gain"                    value="0.9"/> <!-- 0.0 to 1.0 -->
+            <param name="remove_gravity_vector"   value="false"/>
+            <param name="declination"             value="0.1295034"/>
+            <param name="publish_debug_topics"    value="true"/>
+            <param name="use_mag"                 value="true"/>
+            <param name="use_magnetic_field_msg"  value="true"/>
+            <param name="world_frame"             value="enu"/>
+            <!-- <param name="constant_dt" value="0.02"/> -->
+            <param name="fixed_frame"             value="base_link"/>
+            <param name="orientation_stddev"      value="0.02"/> <!-- 0.0 to 1.0 -->
+            <param name="mag_bias_x"              value="0.0"/>
+            <param name="mag_bias_y"              value="0.0"/>
+            <param name="mag_bias_z"              value="0.0"/>
+
+        </node>
+
+    </group>
 </launch>
