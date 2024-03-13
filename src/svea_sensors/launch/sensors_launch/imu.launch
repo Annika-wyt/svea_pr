@@ -20,11 +20,15 @@
     
 
     <group if ="$(arg new_imu)">
-        <node pkg="nodelet" type="nodelet" name="imu_manager" args="manager" output="screen" />
+        #### Nodelet manager ######################################################
+
+        <node pkg="nodelet" type="nodelet" name="imu_manager"
+            args="manager" output="screen" />
 
         #### IMU Driver ###########################################################
 
-        <node pkg="nodelet" type="nodelet" name="ImuFilterNodelet" args="load imu_filter_madgwick/ImuFilterNodelet imu_manager" output="screen">
+            <node pkg="nodelet" type="nodelet" name="ImuFilterNodelet"  args="load imu_filter_madgwick/ImuFilterNodelet imu_manager" output="screen">
+
             <param name="publish_tf"              value="false"/>
             <param name="zeta"                    value="0.1"/> <!-- 0.0041/ 0.033?? -1.0 to 1.0 -->
             <!-- https://stackoverflow.com/questions/47589230/what-is-the-best-beta-value-in-madgwick-filterhttps://stackoverflow.com/questions/47589230/what-is-the-best-beta-value-in-madgwick-filter -->
@@ -41,7 +45,8 @@
             <param name="mag_bias_x"              value="0.0"/>
             <param name="mag_bias_y"              value="0.0"/>
             <param name="mag_bias_z"              value="0.0"/>
-
+            
+        </node>
         </node>
 
     </group>
