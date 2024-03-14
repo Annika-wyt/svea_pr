@@ -8,7 +8,7 @@
     <arg name="imu_device" default="/dev/i2c-1" />
     <arg name="imu_address" default="40" />
     <arg name="imu_frame_id" default="imu" />
-    <arg name="new_imu" default="false" />
+    <arg name="new_imu" default="true" />
 
     <group unless="$(arg new_imu)">
         <node ns="imu" name="imu_node" pkg="svea_sensors" type="bno055_i2c_node" respawn="true" respawn_delay="2">
@@ -22,8 +22,7 @@
     <group if ="$(arg new_imu)">
         #### Nodelet manager ######################################################
 
-        <node pkg="nodelet" type="nodelet" name="imu_manager"
-            args="manager" output="screen" />
+        <node pkg="nodelet" type="nodelet" name="imu_manager" args="manager" output="screen" />
 
         #### IMU Driver ###########################################################
 
@@ -46,7 +45,6 @@
             <param name="mag_bias_y"              value="0.0"/>
             <param name="mag_bias_z"              value="0.0"/>
             
-        </node>
         </node>
 
     </group>
