@@ -32,7 +32,7 @@
             <param name="zeta"                    value="0.1"/> <!-- 0.0041/ 0.033?? -1.0 to 1.0 -->
             <!-- https://stackoverflow.com/questions/47589230/what-is-the-best-beta-value-in-madgwick-filterhttps://stackoverflow.com/questions/47589230/what-is-the-best-beta-value-in-madgwick-filter -->
             <param name="gain"                    value="0.9"/> <!-- 0.0 to 1.0 -->
-            <param name="remove_gravity_vector"   value="false"/>
+            <param name="remove_gravity_vector"   value="true"/>
             <param name="declination"             value="0.1295034"/>
             <param name="publish_debug_topics"    value="true"/>
             <param name="use_mag"                 value="true"/>
