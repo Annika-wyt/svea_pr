@@ -16,6 +16,7 @@ from sensor_msgs.msg import NavSatFix, NavSatStatus
 from nmea_msgs.msg import Sentence
 from std_msgs.msg import Float64
 from rtcm_msgs.msg import Message
+import numpy as np
 __author__ = "Mustafa Al-Janabi"
 __email__ = "musaj@kth.se"
 __license__ = "MIT"
@@ -74,6 +75,9 @@ class RTKManager:
         self.dynamic_model = rospy.get_param("~dynamic_model", "portable")
         # Setup ROS Rate
         self.rate = rospy.Rate(self.RATE)
+
+        self.float_rtk_covariance = 0.2
+        self.no_rtk_covariance = 0.2
         #  Open serial port
         try:
             self.serial = Serial(self.device, self.baud, bytesize=EIGHTBITS, parity=PARITY_NONE,stopbits=STOPBITS_ONE,timeout=1, exclusive=True)
@@ -101,7 +105,7 @@ class RTKManager:
         # Nmea message which get sent to virtual NTRIP servers which give correction message from closes base station based on own location
         self.nmea_pub = rospy.Publisher("/nmea", Sentence, queue_size=10)
         # Publish the satellite fix
-        self.fix_pub = rospy.Publisher("fix", NavSatFix, queue_size=10)
+        self.fix_pub = rospy.Publisher("/fix", NavSatFix, queue_size=10)
         # Heading of 2-D motion in [deg]
         self.heading_motion_pub = rospy.Publisher(
             "heading_motion", Float64, queue_size=10
@@ -169,13 +173,13 @@ class RTKManager:
 
     def setup_receiver(self):
         # CFG-MSG-NAV-STATUS set rateUSB to 0
-        self.set_config(0x01, 0x03, rateUART1=self.rateUART1, rateUSB=self.rateUSB)
+        # self.set_config(0x01, 0x03, rateUART1=self.rateUART1, rateUSB=self.rateUSB)
         # CFG-MSG-NAV-PVT set rateUSB to 1
-        self.set_config(0x01, 0x07, rateUART1=self.rateUART1, rateUSB=self.rateUSB)
+        # self.set_config(0x01, 0x07, rateUART1=self.rateUART1, rateUSB=self.rateUSB)
         # CFG-MSG-NAV-COV set rateUSB to 1
-        self.set_config(0x01, 0x36, rateUART1=self.rateUART1, rateUSB=self.rateUSB)
+        # self.set_config(0x01, 0x36, rateUART1=self.rateUART1, rateUSB=self.rateUSB)
         # CFG-MSG-RXM-RTCM set rateUSB to 1
-        self.set_config(0x02, 0x32, rateUART1=self.rateUART1, rateUSB=self.rateUSB)
+        # self.set_config(0x02, 0x32, rateUART1/self.rateUART1, rateUSB=self.rateUSB)
         # CFG-NAV5 set dynModel to self.dynamic_model
         self.set_dynamic_model(self.dynamic_model)
 
@@ -193,6 +197,7 @@ class RTKManager:
     def _read_serial_handler(self):
         """Manager of all incoming messages from Serial port, reads from serial port at self.RATE [Hz]"""
         while not rospy.is_shutdown():
+            rtk_mode = 0
             raw_msg, parsed_msg = self.ubx_reader.read()
             msg_protocol = protocol(raw_msg)
             if msg_protocol == UBX_PROTOCOL:
@@ -206,6 +211,7 @@ class RTKManager:
 
                     # Only use Ok messages
                     if parsed_msg.gnssFixOk:
+                        rtk_mode = parsed_msg.carrSoln
                         # Comment out the following to debug with a print
                         # lon = parsed_msg.lon
                         # lat = parsed_msg.lat
@@ -231,14 +237,15 @@ class RTKManager:
                         self.nav_sat_fix_msg.longitude = parsed_msg.lon  # [deg]
                         self.nav_sat_fix_msg.altitude = parsed_msg.height / 1e3  # [m]
                         # set status status
-                        self.nav_sat_fix_msg.status.status = GPS_QUALITIES.get(
-                            parsed_msg.fixType,
-                            self.nav_sat_fix_msg.status.STATUS_NO_FIX,
-                        )
+                        self.nav_sat_fix_msg.status.status = parsed_msg.carrSoln*100 + parsed_msg.difSoln*10 + parsed_msg.fixType 
+                        # Status does not follow the conventional ros message definition!!!!!!!!!!
+                        # CarrSoln describes the rtk mode. 0: Not using RTK, 1: using float RTK, 2: using fix RTK
+                        # The quality of float RTK varies (10cm to a few meters)
+                        # Essentially, the larger the number, the better the quality of gps
+                                                
                         # Set status service to GPS
                         self.nav_sat_fix_msg.status.service = (
-                            self.nav_sat_fix_msg.status.SERVICE_GPS
-                        )
+                            self.nav_sat_fix_msg.status.SERVICE_GPS + self.nav_sat_fix_msg.status.SERVICE_GLONASS + self.nav_sat_fix_msg.status.SERVICE_COMPASS + self.nav_sat_fix_msg.status.SERVICE_GALILEO)
 
                         # Publish Speed
                         self.speed_pub.publish(
@@ -299,7 +306,7 @@ class RTKManager:
                     # means that both methods which approximate the vertical covariance are in agreements.
                     # Of course, the additional benefit of using the NAV-COV message is that we also get
                     # the covariance values for the cross-terms.
-
+                    
                     ee = parsed_msg.posCovEE
                     ne = parsed_msg.posCovNE
                     ed = parsed_msg.posCovED
@@ -307,16 +314,32 @@ class RTKManager:
                     nd = parsed_msg.posCovND
                     dd = parsed_msg.posCovDD
                     position_covariance = [ee, ne, -ed, ne, nn, -nd, -ed, -nd, dd]
-                    # Set covariance
-                    self.nav_sat_fix_msg.position_covariance = position_covariance
-                    # Set covariance type to known
-                    self.nav_sat_fix_msg.position_covariance_type = (
-                        self.nav_sat_fix_msg.COVARIANCE_TYPE_KNOWN
-                    )
+
+                    if rtk_mode == 2:
+                        # Set covariance
+                        self.nav_sat_fix_msg.position_covariance = position_covariance
+                        # Set covariance type to known
+                        self.nav_sat_fix_msg.position_covariance_type = (
+                            self.nav_sat_fix_msg.COVARIANCE_TYPE_KNOWN
+                        )
+                    elif rtk_mode == 1:
+                        temp_covariance = [self.float_rtk_covariance, 0, 0, 0, self.float_rtk_covariance, 0, 0, 0, self.float_rtk_covariance]
+                        self.nav_sat_fix_msg.position_covariance = temp_covariance if np.linalg.det(np.array(temp_covariance).reshape((3, 3))) > np.linalg.det(np.array(position_covariance).reshape((3, 3))) else position_covariance
+                        self.nav_sat_fix_msg.position_covariance_type = (
+                            self.nav_sat_fix_msg.COVARIANCE_TYPE_APPROXIMATED
+                        )
+                    elif rtk_mode == 0:
+                        temp_covariance = [self.no_rtk_covariance, 0, 0, 0, self.no_rtk_covariance, 0, 0, 0, self.no_rtk_covariance]
+                        self.nav_sat_fix_msg.position_covariance = temp_covariance if np.linalg.det(np.array(temp_covariance).reshape((3, 3))) > np.linalg.det(np.array(position_covariance).reshape((3, 3))) else position_covariance
+                        self.nav_sat_fix_msg.position_covariance_type = (
+                            self.nav_sat_fix_msg.COVARIANCE_TYPE_APPROXIMATED
+                        )
                     # Publish fix data
                     self.fix_pub.publish(self.nav_sat_fix_msg)
                     # Reset fix message after publishing
                     self.nav_sat_fix_msg = NavSatFix()
+                    rtk_mode = 0
+
             if msg_protocol == NMEA_PROTOCOL:
                 try:
                     nmea_str = raw_msg.decode("ascii")
