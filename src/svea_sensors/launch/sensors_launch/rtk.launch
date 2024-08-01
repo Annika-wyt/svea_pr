@@ -27,9 +27,10 @@
     <!-- <arg name="username"        default="708583036"/> -->
     <!-- <arg name="password"        default="151515"/> -->
     
+    <arg name="rtcm_message_package"           default="rtcm_msgs" />
 
     <group ns="$(arg ns)">
-    <!-- START UBLOX ZED-F9P RTK MANAGER NODE -->
+        <!-- START UBLOX ZED-F9P RTK MANAGER NODE -->
         <node pkg="svea_sensors" type="rtk_manager.py" name="rtk_manager" output="screen" ns="gps">
             <param name="device"        value="$(arg gps_device)"/>
             <param name="baud"          value="$(arg baud)" />
@@ -41,15 +42,32 @@
         </node>
 
         <!-- START NTRIP CLIENT -->
-        <include file="$(find ntrip_client)/launch/ntrip_client.launch">
-            <arg name="namespace"            value="$(arg ns)" />
-            <arg name="host"            value="$(arg host)" />
-            <arg name="port"            value="$(arg port)" /> 
-            <arg name="mountpoint"      value="$(arg mountpoint)" />
-            <arg name="authenticate"    value="$(arg authenticate)"/>
-            <arg name="username"        value="$(arg username)" />
-            <arg name="password"        value="$(arg password)" />
-        </include>
+        <node name="ntrip_client" pkg="ntrip_client" type="ntrip_ros.py" output="screen">
+            <param name="host"                           value="$(arg host)" />
+            <param name="port"                           value="$(arg port)" />
+            <param name="mountpoint"                     value="$(arg mountpoint)" />
+            <param name="authenticate"                   value="$(arg authenticate)" />
+            <param name="username"                       value="$(arg username)" />
+            <param name="password"                       value="$(arg password)" />
+            <param name="ssl"                            value="false" />
+            <param name="rtcm_frame_id"                  value="odom" />
+
+            <!-- Optional parameters that will allow for longer or shorter NMEA messages. Standard max length for NMEA is 82 -->
+            <param name="nmea_max_length"                value="82" />
+            <param name="nmea_min_length"                value="3" />
+
+            <!-- Use this parameter to change the type of RTCM message published by the node. -->
+            <param name="rtcm_message_package"           value="$(arg rtcm_message_package)" />
+
+            <!-- Will affect how many times the node will attempt to reconnect before exiting, and how long it will wait in between attempts when a reconnect occurs -->
+            <param name="reconnect_attempt_max"          value="10" />
+            <param name="reconnect_attempt_wait_seconds" value="5" />
+
+            <!-- How many seconds is acceptable in between receiving RTCM. If RTCM is not received for this duration, the node will attempt to reconnect -->
+            <param name="rtcm_timeout_seconds"           value="4" />
+            <remap from="/ntrip_client/nmea" to="$(arg ns)/nmea"/>
+            <remap from="/ntrip_client/rtcm" to="$(arg ns)/rtcm"/>
+        </node>
     </group>
 
 </launch>
