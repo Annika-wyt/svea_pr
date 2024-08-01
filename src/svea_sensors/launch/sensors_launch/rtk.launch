@@ -7,10 +7,11 @@
     <!-- RTK RECEIVER ARGUMENTS -->
     <arg name="gps_device"          default="/dev/ttyACM0"/> 
     <!-- dev/ttyS0 if connected via UART -->
-    <arg name="baud"            default="250000" />
+    <arg name="baud"            default="115200" />
     <!-- 38400 if connected via UART -->
     <arg name="gps_frame"       default="gps"/>
     <arg name="dynamic_model"   default="portable"/> <!-- Allowed values are "portable", "stationary", "pedestrian","automotive","sea","airborne_1g","airborne_2g", "airborne_4g","wrist_watch", and "bike" -->
+    <arg name="ns"              default="gps"/>
 
     <!-- NTRIP CLIENT ARGUMENTS -->
     <!-- for swepos network rtk -->
@@ -18,33 +19,37 @@
     <arg name="port"            default="80"/>  <!-- PORT 8500 is also valid -->
     <arg name="authenticate"    default="true"/>
     <arg name="mountpoint"      default="MSM_GNSS"/>
-    <arg name="username"        default=""/>
-    <arg name="password"        default=""/>
     <!-- for rtk2go -->
-    <!-- <arg name="host"            default="rtk2go.com"/> -->
-    <!-- <arg name="port"            default="2101"/> -->
-    <!-- <arg name="authenticate"    default="true"/> -->
-    <!-- <arg name="mountpoint"      default="SweArbGotHag"/> -->
-    <!-- <arg name="username"        default=""/> -->
-    <!-- <arg name="password"        default=""/> -->
+    <arg name="username"        default="ITRL03"/>
+    <arg name="password"        default="171488"/>
+    <!-- <arg name="username"        default="707886204"/> -->
+    <!-- <arg name="password"        default="115544"/> -->
+    <!-- <arg name="username"        default="708583036"/> -->
+    <!-- <arg name="password"        default="151515"/> -->
     
 
+    <group ns="$(arg ns)">
     <!-- START UBLOX ZED-F9P RTK MANAGER NODE -->
-    <node pkg="svea_sensors" type="rtk_manager.py" name="rtk_manager" output="screen" ns="gps">
-        <param name="device"        value="$(arg gps_device)"/>
-        <param name="baud"          value="$(arg baud)" />
-        <param name="gps_frame"     value="$(arg gps_frame)" />
-        <param name="dynamic_model" value="$(arg dynamic_model)"/>
-    </node>
+        <node pkg="svea_sensors" type="rtk_manager.py" name="rtk_manager" output="screen" ns="gps">
+            <param name="device"        value="$(arg gps_device)"/>
+            <param name="baud"          value="$(arg baud)" />
+            <param name="gps_frame"     value="$(arg gps_frame)" />
+            <param name="dynamic_model" value="$(arg dynamic_model)"/>
+            <remap from="rtcm"         to="$(arg ns)/rtcm"/>
+            <remap from="nmea"         to="$(arg ns)/nmea"/>
 
-    <!-- START NTRIP CLIENT -->
-    <include file="$(find ntrip_client)/launch/ntrip_client.launch">
-        <arg name="host"            value="$(arg host)" />
-        <arg name="port"            value="$(arg port)" /> 
-        <arg name="mountpoint"      value="$(arg mountpoint)" />
-        <arg name="authenticate"    value="$(arg authenticate)" />
-        <arg name="username"        value="$(arg username)" />
-        <arg name="password"        value="$(arg password)" />
-    </include>
+        </node>
+
+        <!-- START NTRIP CLIENT -->
+        <include file="$(find ntrip_client)/launch/ntrip_client.launch">
+            <arg name="namespace"            value="$(arg ns)" />
+            <arg name="host"            value="$(arg host)" />
+            <arg name="port"            value="$(arg port)" /> 
+            <arg name="mountpoint"      value="$(arg mountpoint)" />
+            <arg name="authenticate"    value="$(arg authenticate)"/>
+            <arg name="username"        value="$(arg username)" />
+            <arg name="password"        value="$(arg password)" />
+        </include>
+    </group>
 
 </launch>

@@ -103,9 +103,9 @@ class RTKManager:
     def _init_pub(self):
         """Initializes publishers for necessary and sufficient topics"""
         # Nmea message which get sent to virtual NTRIP servers which give correction message from closes base station based on own location
-        self.nmea_pub = rospy.Publisher("/nmea", Sentence, queue_size=10)
+        self.nmea_pub = rospy.Publisher("nmea", Sentence, queue_size=10)
         # Publish the satellite fix
-        self.fix_pub = rospy.Publisher("/fix", NavSatFix, queue_size=10)
+        self.fix_pub = rospy.Publisher("fix", NavSatFix, queue_size=10)
         # Heading of 2-D motion in [deg]
         self.heading_motion_pub = rospy.Publisher(
             "heading_motion", Float64, queue_size=10
@@ -134,7 +134,7 @@ class RTKManager:
     def _init_sub(self):
         """Initialize subscribers"""
         # Subscribe to RTCM correction messages from NTRIP Client
-        rospy.Subscriber("/rtcm", Message, self._handle_rtcm_cb)
+        rospy.Subscriber("rtcm", Message, self._handle_rtcm_cb)
 
     def set_config(self, msgClass, msgID, **kwargs):
         """Utility function which write a configuration message to receiver and awaits an acknowledgement."""

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- RTK RECEIVER ARGUMENTS -->
+    <arg name="gps_device1"      default="/dev/ttyUSB0"/> 
+    <arg name="gps_frame1"       default="gps"/>
+    <arg name="username1"        default="ITRL03"/>
+    <arg name="password1"        default="171488"/>
+
+    <arg name="gps_device2"      default="/dev/ttyUSB0"/> 
+    <arg name="gps_frame2"       default="gps"/>
+    <!-- <arg name="username2"        default="707886204"/> -->
+    <!-- <arg name="password2"        default="115544"/> -->
+    <arg name="username2"        default="708583036"/>
+    <arg name="password2"        default="151515"/>
+    
+    <group ns="$(arg gps_device1)">
+        <include file="$(find svea_sensors)/launch/sensors_launch/rtk.launch">
+            <arg name="ns"              value="$(arg gps_device1)"/>
+            <arg name="gps_device"          value="$(arg gps_device1)"/>
+            <arg name="gps_frame"       value="$(arg gps_frame1)" />
+            <arg name="username"        value="$(arg username1)" />
+            <arg name="password"        value="$(arg password1)" />
+        </include>
+    </group>
+
+    <group ns="$(arg gps_device2)">
+        <include file="$(find svea_sensors)/launch/sensors_launch/rtk.launch">
+            <arg name="ns"              value="$(arg gps_device2)"/>
+            <arg name="gps_device"      value="$(arg gps_device2)"/>
+            <arg name="gps_frame"       value="$(arg gps_frame2)" />
+            <arg name="username"        value="$(arg username2)" />
+            <arg name="password"        value="$(arg password2)" />
+        </include>
+    </group>
+
+</launch>
